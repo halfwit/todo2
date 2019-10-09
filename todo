@@ -7,7 +7,8 @@
 case $1 in
 	list) ;;
 	listall) ;;
-	dot) make -Bnd | makefile2graph >/dev/null || echo Please install https://github.com/lindenb/makefile2graph ;;
+	dot) shift
+		make -Bnd --file=$XDG_DATA_HOME/todo2/$@ | makefile2graph >/dev/null || echo Please install https://github.com/lindenb/makefile2graph ;;
 	generate) ;;
 	add) ;;
 	rm) ;;
