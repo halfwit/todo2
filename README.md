@@ -42,8 +42,6 @@ This works wonderfully well, but it is not robust enough for multiple parent, mu
 
 Make solves these sort of dependency hierarchies cleanly, and since I didn't want to write a solver itself at this time, why not just use it! 
 
-The scripts wrap the editing of a proper Makefile, though it is named config.todo to avoid name clobbering; which lives in the root of your project's source tree. Subsequent foo.todo files can be placed where you like them so long as they exist in the tree. 
-
 ## .todo files
 
 A .todo file contains a checklist of items to complete an atomic task. For example, `polygon.todo` may contain the following:
@@ -106,6 +104,10 @@ To add something as a child dependency, `todo add child <parent name> <child nam
 Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree. 
 
 ## Commands of intrigue
+ - `todo init` will create, if none exists, the backing Makefile used internally
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies, with the completed nodes elided
+
+## Sharing
+The best method is to include your existing todo2-specific Makefile into your current revision system, and symbolically link it into the `$XDG_DATA_HOME/todo2/` directory. 
