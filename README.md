@@ -38,9 +38,9 @@ Now, many other methods use tagging to achieve this:
   [ ] Ship update #3
 ```
 
-This works wonderfully well, but it is not robust enough for multiple parent, multiple child relationships that may arise in real life. If Fix #92930 depends on 3 other things, one of which depends on #01209 we wouldn't be able to express that #01209 blocks the parent dependancies of #92930 cleanly. 
+This works wonderfully well, but it is not robust enough for multiple parent, multiple child relationships that may arise in real life. If Fix #92930 depends on 3 other things, one of which depends on #01209 we wouldn't be able to express that #01209 blocks the parent dependencies of #92930 cleanly. 
 
-Make solves these sort of dependancy hierarchies cleanly, and since I didn't want to write a solver itself at this time, why not just use it! 
+Make solves these sort of dependency hierarchies cleanly, and since I didn't want to write a solver itself at this time, why not just use it! 
 
 The scripts wrap the editing of a proper Makefile, though it is named config.todo to avoid name clobbering; which lives in the root of your project's source tree. Subsequent foo.todo files can be placed where you like them so long as they exist in the tree. 
 
@@ -70,9 +70,9 @@ Now, no one wants to write all that out all the time. Shouldn't this be able to 
 
 To say a particular .todo depends on another, we can manually edit the Makefile, or we can use the wrapper scripts to simplify the process. 
 `todo add` is the base command we'll be using, to add hierarchies. (A complementary `todo rm` can be used to undo anything `todo add` can do!)
-To add something as a child dependancy, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. Arbitrarily many dependancies can be added between arbitrary pieces within the current working source tree. 
+To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree. 
 
 ## Commands of intrigue
- - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependancies) 
+ - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies, with the completed nodes elided
