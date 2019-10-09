@@ -59,6 +59,34 @@ BUG #012099 - Blob considered too small by users
 [ ] blob.go: Implement room bounds checking
 ```
 
+To add an entry into a particular task, such as the last line of BUG #92930 is trivial:
+`todo add entry 'BUG #92930' "polygon.go: Hand back better error info to the calling function"`
+
+You can also use stdin:
+
+`some function | todo add entry someentry`
+
+If for some reason you wish to remove an entry, you can use the complement to `add`, `rm`.
+`todo remove entry 'BUG #92930'`
+
+Since .todo files are simply text files, you can also achieve any of the above by opening and editing the file by hand.
+
+## Completing tasks in .todo files
+
+The following commands modify the state of a given entry's task:
+
+ - `todo task toggle <entry> <index|string>`
+ - `todo task do <entry> <index|string>`
+ - `todo task undo <entry> <index|string>`
+ - `todo task rm <entry> <index|string>`
+
+For example, to toggle the completion of MyType implementing ReaderAt:
+
+`todo task do 'BUG #92930' 'MyType should implement ReaderAt'`
+
+You'll notice the file name is elided, for brevity a partial string match is all that is required. `todo task do 'BUG #92930' MyType would suffice in our example.
+By index, it's similar: `todo task do 'BUG #92930' 1` would update the .todo file to read `[x] polygon.go: MyType should implement ReaderAt`.
+
 ## Automatically generate .todo files
 
 Now, no one wants to write all that out all the time. Shouldn't this be able to pull a generic `// TODO:` tag, or `# TODO:`, etc? Yeah, I thought so too.
