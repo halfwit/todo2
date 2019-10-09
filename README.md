@@ -108,6 +108,7 @@ Arbitrarily many dependencies can be added between arbitrary pieces within the c
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies, with the completed nodes elided
+   (Requires https://github.com/lindenb/makefile2graph)
 
 ## Sharing
 The best method is to include your existing todo2-specific Makefile into your current revision system, and symbolically link it into the `$XDG_DATA_HOME/todo2/` directory. 
