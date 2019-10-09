@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Makefiles will output a list of leaves with incomplete tasks
+make --keep-going $1 | show_todo
+make clean $1
+
