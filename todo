@@ -4,3 +4,10 @@
 make --keep-going $1 | show_todo
 make clean $1
 
+case $1 in
+	list) ;;
+	listall) ;;
+	dot) ;;
+	generate) ;;
+	add) ;;
+esac
