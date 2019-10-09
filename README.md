@@ -2,7 +2,7 @@
 
 This simple script makes us of Make's directed acyclic graph solving, to express TODO lists in a way that allows multiple hierarchies of parent/child relationships between different atomic tasks.
 
-For example, here's a simple list.
+Consider the following traditional TODO list.
 
 ```
 # Birthday Party TODO
@@ -11,10 +11,10 @@ For example, here's a simple list.
 [ ] give presents
 ```
 
-Now traditionally, the other steps involved in making the above happen would be listed; perhaps even heirarchally:
+Normally, the other steps involved in making the above happen would be listed; perhaps even heirarchally:
 
 ```
-# Birthday Party Prep
+# Birthday Party TODO
 [ ] Get cake mix
   [ ] Bake cake
     [ ] Eat cake
