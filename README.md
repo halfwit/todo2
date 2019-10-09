@@ -62,6 +62,7 @@ BUG #012099 - Blob considered too small by users
 ## Automatically generate .todo files
 
 Now, no one wants to write all that out all the time. Shouldn't this be able to pull a generic `// TODO:` tag, or `# TODO:`, etc? Yeah, I thought so too.
+
 `todo generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG #92930: Trying to seek returns incomprehensible error when calling SomeCall`   an entry will be made in an appropriate .todo file in that particular source directory/subdirectory, which will be created as necessary.
  - files with extensions will have the extension replaced with .todo, and files without extensions will gain the extension .todo. Name collisions should be benign here.
  - more extensive coverage of tagging conventions can be Pull Requested as needed by users
@@ -69,8 +70,12 @@ Now, no one wants to write all that out all the time. Shouldn't this be able to 
 ## Managing dependancy hierarchy
 
 To say a particular .todo depends on another, we can manually edit the Makefile, or we can use the wrapper scripts to simplify the process. 
+
 `todo add` is the base command we'll be using, to add hierarchies. (A complementary `todo rm` can be used to undo anything `todo add` can do!)
-To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree. 
+
+To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. 
+
+Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree. 
 
 ## Commands of intrigue
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
