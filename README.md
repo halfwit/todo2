@@ -1,4 +1,4 @@
-# todocli
+# todo2
 
 This simple script makes us of Make's directed acyclic graph solving, to express TODO lists in a way that allows multiple hierarchies of parent/child relationships between different atomic tasks.
 
@@ -62,5 +62,6 @@ BUG #012099 - Blob considered too small by users
 ## Automatically generate .todo files
 
 Now, no one wants to write all that out all the time. Shouldn't this be able to pull a generic `// TODO:` tag, or `# TODO:`, etc? Yeah, I thought so too.
-`todocli generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG: #92930 Trying to seek returns incomprehensible error when calling SomeCall` it will be added automatically, in an entry similar to the one above.
-
+`todo generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG #92930: Trying to seek returns incomprehensible error when calling SomeCall`   an entry will be made in an appropriate .todo file in that particular source directory/subdirectory, which will be created as necessary.
+ - files with extensions will have the extension replaced with .todo, and files without extensions will gain the extension .todo. Name collisions should be benign here.
+ - more extensive coverage of tagging conventions can be Pull Requested as needed by users
