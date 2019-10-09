@@ -54,7 +54,7 @@ BUG #92930 - Trying to seek returns incomprehensible error when calling SomeCall
 [ ] polygon.go: Check return value of SomeCall and try to recover
 [ ] polygon.go: Hand back better error info to the calling function
 
-BUG #012099
+BUG #012099 - Blob considered too small by users
 [ ] blob.go: Make blob 2x larger when it feels threatened
 [ ] blob.go: Implement room bounds checking
 ```
