@@ -22,6 +22,7 @@ func newCommand(arg string) (*command, error) {
 	c := &command{}
 
 	if arg == "task" {
+		c.args = flag.Args()[1:]
 		c.runner = task
 		return c, nil
 	}
@@ -39,6 +40,8 @@ func newCommand(arg string) (*command, error) {
 // needing to do any additional bookkeeping in the functions themselves
 func (c command) setTask(arg string) error {
 	switch arg {
+	//case "help":
+		//c.runner = help
 	case "init":
 		c.runner = initFile
 	case "list":
@@ -48,10 +51,16 @@ func (c command) setTask(arg string) error {
 	case "dot":
 		c.runner = dot
 	case "rm":
-		c.args = flag.Args()
+		if flag.NArg < 2 {
+			return errors.New("No arguments supplied to rm")
+		}
+		c.args = flag.Args()[1:]
 		c.runner = rm
 	case "add":
-		c.args = flag.Args()
+		if flag.NArg < 2 {
+			return errors.New("No arguments supplied to add")
+		}
+		c.args = flag.Args()[1:]
 		c.runner = add
 	case "generate":
 		c.runner = generate

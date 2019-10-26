@@ -1,6 +1,6 @@
 # todo2
 
-This simple script makes us of Make's directed acyclic graph solving, to express TODO lists in a way that allows multiple hierarchies of parent/child relationships between different atomic tasks.
+This simple script makes us of directed acyclic graph solving, to express TODO lists in a way that allows multiple hierarchies of parent/child relationships between different atomic tasks.
 
 Consider the following traditional TODO list.
 
@@ -95,8 +95,6 @@ Now, no one wants to write all that out all the time. Shouldn't this be able to 
 
 ## Managing dependancy hierarchy
 
-To say a particular .todo depends on another, we can manually edit the Makefile, or we can use the wrapper scripts to simplify the process. 
-
 `todo add` is the base command we'll be using, to add hierarchies. (A complementary `todo rm` can be used to undo anything `todo add` can do!)
 
 To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. 
@@ -104,11 +102,11 @@ To add something as a child dependency, `todo add child <parent name> <child nam
 Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree. 
 
 ## Commands of intrigue
- - `todo init` will create, if none exists, the backing Makefile used internally
+ - `todo init` will create, if none exists, the backing Makefile-like file used internally
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies, with the completed nodes elided
-   (Requires https://github.com/lindenb/makefile2graph)
+ - `todo dotall` will output a complete graph of all task hierarchies
 
 ## Sharing
-The best method is to include your existing todo2-specific Makefile into your current revision system, and symbolically link it into the `$XDG_DATA_HOME/todo2/` directory. 
+The best method is to include your existing todo2 main file into your current revision system, and symbolically link it into the `$XDG_DATA_HOME/todo2/myproject` directory. 
