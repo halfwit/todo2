@@ -20,5 +20,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmd.runCmd()
+	cmd.run()
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -41,7 +42,7 @@ func newCommand(arg string) (*command, error) {
 func (c command) setTask(arg string) error {
 	switch arg {
 	//case "help":
-		//c.runner = help
+	//c.runner = help
 	case "init":
 		c.runner = initFile
 	case "list":
@@ -51,13 +52,13 @@ func (c command) setTask(arg string) error {
 	case "dot":
 		c.runner = dot
 	case "rm":
-		if flag.NArg < 2 {
+		if flag.NArg() < 2 {
 			return errors.New("No arguments supplied to rm")
 		}
 		c.args = flag.Args()[1:]
 		c.runner = rm
 	case "add":
-		if flag.NArg < 2 {
+		if flag.NArg() < 2 {
 			return errors.New("No arguments supplied to add")
 		}
 		c.args = flag.Args()[1:]
@@ -84,8 +85,8 @@ func (c command) setEnv() error {
 	return nil
 }
 
-// Broken out from main because there may be more busywork as things progress
-func (c *command) runCmd() {
+// As above, broken out for posterity
+func (c *command) run() {
 	if c.runner != nil {
 		c.runner(c)
 	}
