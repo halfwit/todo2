@@ -16,7 +16,7 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
-	cmd, err := newCommand(flag.Arg(1))
+	cmd, err := newCommand(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
 	}

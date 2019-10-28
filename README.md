@@ -74,16 +74,14 @@ Since .todo files are simply text files, you can also achieve any of the above b
 The following commands modify the state of a given entry's task:
 
  - `todo task toggle <entry> <index|string>`
- - `todo task do <entry> <index|string>`
- - `todo task undo <entry> <index|string>`
  - `todo task rm <entry> <index|string>`
 
 For example, to toggle the completion of MyType implementing ReaderAt:
 
-`todo task do 'BUG #92930' 'MyType should implement ReaderAt'`
+`todo task toggle 'BUG #92930' 'MyType should implement ReaderAt'`
 
-You'll notice the file name is elided, for brevity a partial string match is all that is required. `todo task do 'BUG #92930' MyType would suffice in our example.
-By index, it's similar: `todo task do 'BUG #92930' 1` would update the .todo file to read `[x] polygon.go: MyType should implement ReaderAt`.
+You'll notice the file name is elided, for brevity a partial string match is all that is required. `todo task toggle 'BUG #92930' MyType` would suffice in our example.
+By index, it's similar: `todo task toggle 'BUG #92930' 1` would update the .todo file to read `[x] polygon.go: MyType should implement ReaderAt`.
 
 ## Automatically generate .todo files
 
