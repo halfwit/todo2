@@ -58,23 +58,22 @@ BUG #012099 - Blob considered too small by users
 ```
 
 To add an entry into a particular task, such as the last line of BUG #92930 is trivial:
-`todo add entry 'BUG #92930' "polygon.go: Hand back better error info to the calling function"`
+`todo task add 'BUG #92930' "polygon.go: Hand back better error info to the calling function"`
 
 You can also use stdin:
 
-`some function | todo add entry someentry`
+`some function | todo task add someentry`
 
 If for some reason you wish to remove an entry, you can use the complement to `add`, `rm`.
-`todo remove entry 'BUG #92930'`
+`todo task rm 'BUG #92930' <index|string>`
 
 Since .todo files are simply text files, you can also achieve any of the above by opening and editing the file by hand.
 
 ## Completing tasks in .todo files
 
-The following commands modify the state of a given entry's task:
+The following command modifies the state of a given entry's task:
 
  - `todo task toggle <entry> <index|string>`
- - `todo task rm <entry> <index|string>`
 
 For example, to toggle the completion of MyType implementing ReaderAt:
 
@@ -97,7 +96,7 @@ Now, no one wants to write all that out all the time. Shouldn't this be able to 
 
 To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. 
 
-Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree. 
+Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree.
 
 ## Commands of intrigue
  - `todo init` will create, if none exists, the backing Makefile-like file used internally

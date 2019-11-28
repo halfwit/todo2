@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -87,24 +90,62 @@ func parseEntries(sc *bufio.Scanner) []*entry {
 	}
 }
 
+// We want to return any matched string for entry, otherwise return $dirname.todo of current directory
+func findEntry(entry string) string {
+	wd, _ := os.Getwd()
+	match := path.Base(wd) + ".todo"
+
+	filepath.Walk(".", func(p string, info os.FileInfo, err error) error {
+		if path.Ext(p) != ".todo" {
+			return nil
+		}
+		// Found a file! Search for entry
+		f, err := os.Open(p)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			if strings.Contains(scanner.Text(), entry) {
+				match = p
+				return filepath.SkipDir
+			}
+		}
+		return nil
+	})
+	return match
+}
+
 func task(c *command) error {
 	if len(c.args) < 2 {
 		return errors.New("Too few arguments supplied")
 	}
-	//fp, err := findEntry(c.args[1])
-	//if err != nil {
-	//return err
-	//}
-	fp := "test"
+	fp := findEntry(c.args[1])
 	l, err := parse(fp)
-	if err != nil {
+	if err != nil && c.args[0] != "create" {
 		return err
 	}
 
 	switch c.args[0] {
 	case "create":
-		defer l.write()
-		return l.create(c.args[1])
+		l = &layout{
+			TaskList: []*entries{},
+			file:     fp,
+		}
+		err = l.create(c.args[1])
+		if err != nil {
+			return err
+		}
+		l.write()
+		return nil
+	case "destroy":
+		err := l.destroy(c.args[1])
+		if err != nil {
+			return err
+		}
+		l.write()
+		return nil
 	case "add":
 		if l.exists(c.args[1], c.args[2]) {
 			return fmt.Errorf("Entry exists")
@@ -127,6 +168,23 @@ func task(c *command) error {
 	default:
 		return fmt.Errorf("Command not supported: %v", c.args[0])
 	}
+}
+
+func (l *layout) destroy(title string) error {
+	if _, err := os.Stat(l.file); err != nil {
+		return errors.New("Unable to locate .todo file")
+	}
+	for i, e := range l.TaskList {
+		if e.Title != title {
+			continue
+		}
+		if i < len(l.TaskList)-1 {
+			copy(l.TaskList[i:], l.TaskList[i+1:])
+		}
+		l.TaskList = l.TaskList[:len(l.TaskList)-1]
+		return nil
+	}
+	return errors.New("No such entry")
 }
 
 func (l *layout) create(title string) error {
