@@ -1,0 +1,49 @@
+#1 TODO(halfwit): Create generate function
+
+[ ] generate.go: WalkFunc check for any match
+[ ] generate.go: Create each file
+
+#2 TODO(halfwit) #2 Create add function
+
+requires TODO(halfwit) #8
+
+[ ] add.go: Add link to dag
+
+#3 TODO(halfwit): Create rm function
+
+requires TODO(halfwit) #9
+
+[ ] rm.go: Remove link from dag
+
+#4 TODO(halfwit): Create dot function
+
+requires TODO(halfwit) #10
+[ ] list.go: Use dag libraries' built in dot printer
+
+#5 TODO(halfwit): Create list function
+
+requires TODO(halfwit) #10
+[ ] list.go: Print each leaf to stdout
+
+#6 TODO(halfwit): Create listAll function
+
+requires TODO(halfwit) #10
+[ ] list.go: Print each node to stdout
+
+#7 TODO(halfwit): Build graph function
+[ ] dag.go: Parse in .todo files
+[ ] dag.go: add edges/vertices into DAG
+
+#8 TODO(halfwit): add Subcommand
+[ ] add.go: AddChild
+[ ] add.go: AddParent
+
+#9 TODO(halfwit): rm Subcommands
+[ ] rm.go: RmChild
+[ ] rm.go: RmParent
+
+#10 TODO(halfwit): walk nodes
+[ ] list.go: Walk each node in the dag
+
+#11 TODO(halfwit): Write out to file
+[ ] write.go: Write out files with changes

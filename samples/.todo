@@ -1,0 +1,25 @@
+#1: 
+TODO(halfwit) - Write all the code
+[ ] general: Show what things look like when added manually
+[ ] general: Show what auto generated looks like as well
+
+#2: requires [#1]
+TODO(halfwit) - remember how to write c code on normal systems
+[ ] sample.c: write the stuff
+[ ] sample.c: don't get hung up on the details
+
+#3: requires [#1]
+TODO(halfwit) - Make a demo of something interesting to demo `todo generate`
+[ ] sample.go: write the code
+[ ] sample.go: take the time
+
+#4: requires [#1] [example]
+TODO(halfwit) - Write some sample code
+[ ] sample.sh: get to the choppa
+[ ] sample.sh: return
+INFO - Show adding multiple components to a single task from other source files
+[x] file2.sh: Add another todo entry for the same tag
+
+example:
+[x] general: Show how headers are optional
+[x] general: Show something silly

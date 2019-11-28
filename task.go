@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
-	"strings"
 	"text/template"
 )
 
@@ -19,7 +16,6 @@ const tmplt = `{{range .TaskList}}{{.Title}}
 
 type layout struct {
 	TaskList []*entries
-	file     string
 }
 
 // Entries - set of todo items for a give task
@@ -34,12 +30,11 @@ type entry struct {
 	Done bool
 }
 
-func parse(file string) (*layout, error) {
+func parse() (*layout, error) {
 	l := &layout{
 		TaskList: []*entries{},
-		file:     file,
 	}
-	fl, err := os.Open(file)
+	fl, err := os.Open(".todo")
 	if err != nil {
 		return nil, err
 	}
@@ -90,39 +85,11 @@ func parseEntries(sc *bufio.Scanner) []*entry {
 	}
 }
 
-// We want to return any matched string for entry, otherwise return $dirname.todo of current directory
-func findEntry(entry string) string {
-	wd, _ := os.Getwd()
-	match := path.Base(wd) + ".todo"
-
-	filepath.Walk(".", func(p string, info os.FileInfo, err error) error {
-		if path.Ext(p) != ".todo" {
-			return nil
-		}
-		// Found a file! Search for entry
-		f, err := os.Open(p)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			if strings.Contains(scanner.Text(), entry) {
-				match = p
-				return filepath.SkipDir
-			}
-		}
-		return nil
-	})
-	return match
-}
-
 func task(c *command) error {
 	if len(c.args) < 2 {
 		return errors.New("Too few arguments supplied")
 	}
-	fp := findEntry(c.args[1])
-	l, err := parse(fp)
+	l, err := parse()
 	if err != nil && c.args[0] != "create" {
 		return err
 	}
@@ -131,7 +98,6 @@ func task(c *command) error {
 	case "create":
 		l = &layout{
 			TaskList: []*entries{},
-			file:     fp,
 		}
 		err = l.create(c.args[1])
 		if err != nil {
@@ -171,7 +137,7 @@ func task(c *command) error {
 }
 
 func (l *layout) destroy(title string) error {
-	if _, err := os.Stat(l.file); err != nil {
+	if _, err := os.Stat(".todo"); err != nil {
 		return errors.New("Unable to locate .todo file")
 	}
 	for i, e := range l.TaskList {
@@ -199,7 +165,7 @@ func (l *layout) create(title string) error {
 }
 
 func (l *layout) write() {
-	wr, err := os.Create(l.file)
+	wr, err := os.Create(".todo")
 	defer wr.Close()
 	if err != nil {
 		log.Fatal(err)
