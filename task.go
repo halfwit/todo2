@@ -102,6 +102,9 @@ func task(c *command) error {
 	}
 
 	switch c.args[0] {
+	case "create":
+		defer l.write()
+		return l.create(c.args[1])
 	case "add":
 		if l.exists(c.args[1], c.args[2]) {
 			return fmt.Errorf("Entry exists")
@@ -124,6 +127,17 @@ func task(c *command) error {
 	default:
 		return fmt.Errorf("Command not supported: %v", c.args[0])
 	}
+}
+
+func (l *layout) create(title string) error {
+	if len(title) < 1 {
+		return errors.New("Unable to add nil entry")
+	}
+	l.TaskList = append(l.TaskList, &entries{
+		Title: title,
+		List:  []*entry{},
+	})
+	return nil
 }
 
 func (l *layout) write() {
