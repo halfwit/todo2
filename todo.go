@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	mkfile = flag.String("mkfile", "", "Alternate Makefile to use")
+	mkfile = flag.String("m", "", "Alternate Makefile to use")
 )
 
 func main() {
@@ -16,6 +16,7 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
+	// Build and run our command
 	cmd, err := newCommand(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)

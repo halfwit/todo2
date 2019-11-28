@@ -1,65 +1,122 @@
 package main
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"text/template"
 )
 
-const tmplt = `{{range .tasklist .}}
-{{if and .list .title}}
-{{.title}}
-{{range .list .}}{{if .done}}[*]{{else}}[ ]{{end}} {{.desc}}{{end}}
-
+const tmplt = `{{range .TaskList}}{{.Title}}
+{{range .List}}{{if .Done}}[x] {{.Desc}}{{else}}[ ] {{.Desc}}{{end}}
 {{end}}
-{{end}}
-`
-
-/* Example:
-My entry title
-[ ] an entry
-[*] a done entry
-
-My other entry
-[ ] an entry
-[*] a done entry
-*/
+{{end}}`
 
 type layout struct {
-	tasklist []entries
+	TaskList []*entries
+	file     string
 }
 
+// Entries - set of todo items for a give task
 type entries struct {
-	title string
-	list  []entry
+	Title string
+	List  []*entry
 }
 
+// Entry - individual item of a set of tasks
 type entry struct {
-	desc string
-	done bool
+	Desc string
+	Done bool
+}
+
+func parse(file string) (*layout, error) {
+	l := &layout{
+		TaskList: []*entries{},
+		file:     file,
+	}
+	fl, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	sc := bufio.NewScanner(fl)
+	for sc.Scan() {
+		if sc.Text() == "" {
+			continue
+		}
+		tl := &entries{
+			Title: sc.Text(),
+			List:  parseEntries(sc),
+		}
+		l.TaskList = append(l.TaskList, tl)
+	}
+	if err := sc.Err(); err != nil {
+		return nil, err
+	}
+
+	return l, nil
+}
+
+func parseEntries(sc *bufio.Scanner) []*entry {
+	sc.Scan()
+	en := []*entry{}
+	for {
+		d := sc.Text()
+		if len(d) < 4 {
+			return en
+		}
+		if err := sc.Err(); err != nil {
+			log.Fatal(err)
+		}
+		switch d[:3] {
+		case "[ ]":
+			en = append(en, &entry{
+				Desc: d[4:],
+				Done: false,
+			})
+		case "[x]":
+			en = append(en, &entry{
+				Desc: d[4:],
+				Done: true,
+			})
+		default:
+			return en
+		}
+		sc.Scan()
+	}
 }
 
 func task(c *command) error {
-	l, err := parse("test")
+	if len(c.args) < 2 {
+		return errors.New("Too few arguments supplied")
+	}
+	//fp, err := findEntry(c.args[1])
+	//if err != nil {
+	//return err
+	//}
+	fp := "test"
+	l, err := parse(fp)
 	if err != nil {
 		return err
 	}
+
 	switch c.args[0] {
 	case "add":
-		if len(c.args) < 3 || l.exists(c.args[1], c.args[2]) {
+		if l.exists(c.args[1], c.args[2]) {
 			return fmt.Errorf("Entry exists")
 		}
-		defer l.write()
-		return l.add(c.args[1], c.args[2])
+		l.add(c.args[1], c.args[2])
+		l.write()
+		return nil
 	case "rm":
-		if len(c.args) < 3 || !l.exists(c.args[1], c.args[2]) {
+		if !l.exists(c.args[1], c.args[2]) {
 			return fmt.Errorf("No entry found")
 		}
 		defer l.write()
 		return l.rm(c.args[1], c.args[2])
 	case "toggle":
-		if len(c.args) < 3 || !l.exists(c.args[1], c.args[2]) {
+		if !l.exists(c.args[1], c.args[2]) {
 			return fmt.Errorf("No such task/entry")
 		}
 		defer l.write()
@@ -70,22 +127,25 @@ func task(c *command) error {
 }
 
 func (l *layout) write() {
-	wr, err := os.Create("tmp")
+	wr, err := os.Create(l.file)
 	defer wr.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
-	t := template.Must(template.New(".todo").Parse(tmplt))
-	t.Execute(wr, l)
+	t := template.Must(template.New("tmplt").Parse(tmplt))
+	err = t.Execute(wr, l)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func (l *layout) exists(title, item string) bool {
-	for _, e := range l.tasklist {
-		if e.title != title {
+func (l *layout) exists(Title, item string) bool {
+	for _, e := range l.TaskList {
+		if e.Title != Title {
 			continue
 		}
-		for _, t := range e.list {
-			if t.desc == item {
+		for _, t := range e.List {
+			if t.Desc == item {
 				return true
 			}
 		}
@@ -93,56 +153,58 @@ func (l *layout) exists(title, item string) bool {
 	return false
 }
 
-func (l *layout) add(title, item string) error {
-	for _, e := range l.tasklist {
-		if e.title != title {
+func (l *layout) add(Title, item string) error {
+	for _, e := range l.TaskList {
+		// Found existing task, append to List
+		if e.Title != Title {
 			continue
 		}
-		e.list = append(e.list, entry{
-			desc: item,
-			done: false,
+		e.List = append(e.List, &entry{
+			Desc: item,
+			Done: false,
 		})
 		return nil
 	}
-	line := entry{
-		desc: item,
-		done: false,
+	line := &entry{
+		Desc: item,
+		Done: false,
 	}
-	l.tasklist = append(l.tasklist, entries{
-		title: title,
-		list:  []entry{line},
+	l.TaskList = append(l.TaskList, &entries{
+		Title: Title,
+		List:  []*entry{line},
 	})
 	return nil
 }
 
-func (l *layout) rm(title, item string) error {
-	for _, e := range l.tasklist {
-		if e.title != title {
+func (l *layout) rm(Title, item string) error {
+	for _, e := range l.TaskList {
+		if e.Title != Title {
 			continue
 		}
-		for i, t := range e.list {
-			if t.desc != item {
+		for i, t := range e.List {
+			if t.Desc != item {
 				continue
 			}
-			if i < len(e.list)-1 {
-				copy(e.list[i:], e.list[i+1:])
+			if i < len(e.List)-1 {
+				copy(e.List[i:], e.List[i+1:])
 			}
-			e.list = e.list[:len(e.list)-1]
+			e.List = e.List[:len(e.List)-1]
 			return nil
 		}
 	}
 	return fmt.Errorf("No such task/entry")
 }
-func (l *layout) toggle(title, item string) error {
-	for _, e := range l.tasklist {
-		if e.title != title {
+
+func (l *layout) toggle(Title, item string) error {
+	for _, e := range l.TaskList {
+		if e.Title != Title {
 			continue
 		}
-		for _, t := range e.list {
-			if t.desc != item {
+		for _, t := range e.List {
+			if t.Desc != item {
 				continue
 			}
-			t.done = !t.done
+			t.Done = !t.Done
 			return nil
 		}
 	}

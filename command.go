@@ -4,15 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path"
 
 	"github.com/altid/fslib"
 )
 
-// Initialize a command here to run in main
-// Generally we could just run a command based on a case match
-// but should this ever need to scale, this design will help us
 type command struct {
 	mkfile string
 	args   []string
@@ -21,7 +19,7 @@ type command struct {
 
 func newCommand(arg string) (*command, error) {
 	c := &command{}
-	
+
 	if arg == "task" {
 		c.args = flag.Args()[1:]
 		c.runner = task
@@ -36,9 +34,21 @@ func newCommand(arg string) (*command, error) {
 	return c, nil
 }
 
-// This is pure bloat at the moment, a hashmap would be fine for mapping args to funcs
-// as would calling a func itself in the case match. We want to future proof against
-// needing to do any additional bookkeeping in the functions themselves
+func (c command) setEnv() error {
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	data, err := fslib.UserShareDir()
+	if err != nil {
+		return err
+	}
+	os.MkdirAll(path.Join(data, "todo"), 0755)
+	c.mkfile = path.Join(data, "todo", path.Base(dir))
+	return nil
+}
+
 func (c command) setTask(arg string) error {
 	switch arg {
 	//case "help":
@@ -71,23 +81,11 @@ func (c command) setTask(arg string) error {
 	return nil
 }
 
-func (c command) setEnv() error {
-
-	dir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	data, err := fslib.UserShareDir()
-	if err != nil {
-		return err
-	}
-	c.mkfile = path.Join(data, "todo", path.Base(dir))
-	return nil
-}
-
-// As above, broken out for posterity
 func (c *command) run() {
 	if c.runner != nil {
-		c.runner(c)
+		err := c.runner(c)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
