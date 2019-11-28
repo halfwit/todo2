@@ -34,8 +34,7 @@ func newCommand(arg string) (*command, error) {
 	return c, nil
 }
 
-func (c command) setEnv() error {
-
+func (c *command) setEnv() error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -49,10 +48,10 @@ func (c command) setEnv() error {
 	return nil
 }
 
-func (c command) setTask(arg string) error {
+func (c *command) setTask(arg string) error {
 	switch arg {
-	//case "help":
-	//c.runner = help
+	case "help":
+		c.runner = help
 	case "init":
 		c.runner = initFile
 	case "list":
