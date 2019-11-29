@@ -7,18 +7,22 @@ import (
 
 func list(c *command) error {
 	l, err := layoutFromTodoFile()
-	if err != nil && c.args[0] != "create" {
+	if err != nil {
 		return err
 	}
+	//d := dagFromLayout(l)
+	//writeList(d)
 	writeList(l)
 	return nil
 }
 
 func listall(c *command) error {
 	l, err := layoutFromTodoFile()
-	if err != nil && c.args[0] != "create" {
+	if err != nil {
 		return err
 	}
+	//d := dagFromLayout(l)
+	//writeListAll(d)
 	writeListAll(l)
 	return nil
 }
@@ -43,9 +47,9 @@ func rm(c *command) error {
 	defer writeTodo(l)
 	switch c.args[0] {
 	case "parent":
-		l.rmLink(parent, c.args[1], c.args[2])
+		l.rmLink(c.args[2], c.args[1])
 	case "child":
-		l.rmLink(child, c.args[1], c.args[2])
+		l.rmLink(c.args[1], c.args[1])
 	default:
 		return fmt.Errorf("Command not supported: %v", c.args[0])
 	}
@@ -57,29 +61,29 @@ func add(c *command) error {
 		return fmt.Errorf("Incorrect arguments supplied to add")
 	}
 	l, err := layoutFromTodoFile()
-	if err != nil && c.args[0] != "create" {
+	if err != nil {
 		return err
 	}
 	switch c.args[0] {
 	case "parent":
-		l.addLink(parent, c.args[1], c.args[2])
+		l.addLink(c.args[2], c.args[1])
 	case "child":
-		l.addLink(child, c.args[1], c.args[2])
+		l.addLink(c.args[1], c.args[2])
 	default:
-		return fmt.Errorf("Command not supported: %v", c.args[0])
+		return fmt.Errorf("Command not supported: %v %v", c.args[0], c.args[1])
 	}
+	writeTodo(l)
 	return nil
 }
 
 // generate walks the file looking for a handful of known tokens
 func generate(c *command) error {
-	//g := newGenerator()
-	//g.Compare(l)
-	// WalkFunc through and search each file. We do want to early exit on an unsupported mime
-	// We'll use a codified list of mappings for now, PR to update.
-	// use http.DetectContentType(data) and send off to a go routine when it's a known type
-	// Return on channel to run l.command on for the given types, run commands in main thread until done
-	// In the end, we'll have a workable layout
+	g := newGenerator()
+	if g.dotTodoExists() {
+		g.parseTodo()
+	}
+	l := g.toLayout()
+	writeTodo(l)
 	return nil
 }
 
@@ -93,9 +97,6 @@ func task(c *command) error {
 	}
 	switch c.args[0] {
 	case "create":
-		l = &Layout{
-			TaskList: []*Entries{},
-		}
 		err = l.create(c.args[1])
 		if err != nil {
 			return err

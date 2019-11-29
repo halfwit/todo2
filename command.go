@@ -38,13 +38,13 @@ func (c *command) setTask(arg string) error {
 		if flag.NArg() < 2 {
 			return errors.New("No arguments supplied to rm")
 		}
-		c.args = flag.Args()[:1]
+		c.args = flag.Args()[1:]
 		c.runner = rm
 	case "add":
 		if flag.NArg() < 2 {
 			return errors.New("No arguments supplied to add")
 		}
-		c.args = flag.Args()[:1]
+		c.args = flag.Args()[1:]
 		c.runner = add
 	case "generate":
 		c.runner = generate

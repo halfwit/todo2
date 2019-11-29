@@ -6,59 +6,38 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 )
 
-/* This is what we want after parsing
+// Layout represents a fully parsed .todo file
 type Layout struct {
-	TaskList []*Tasks
+	Jobs []*Job
 }
 
-type Tasks struct {
-	Tag string
+// Job - A tagged collection of tasks
+type Job struct {
+	Tags     []string
 	Requires []string
-	Tasks []*Task
+	Tasks    []*Task
 }
 
+// Task - A collection of Entries (checkboxes)
 type Task struct {
-	Title string
+	Title   string
 	Entries []*Entry
 }
 
+// Entry -  single checkbox todo item
 type Entry struct {
 	Desc string
 	Done bool
-}
-*/
-
-const (
-	parent int = iota
-	child
-)
-
-// Layout - Structure representing a given .todo file
-type Layout struct {
-	TaskList []*Entries
-}
-
-// Entries - set of todo items for a give task
-type Entries struct {
-	Title string
-	List  []*Entry
-}
-
-// Entry - individual item of a set of tasks
-type Entry struct {
-	Desc string
-	Done bool
-}
-
-func layoutFromWorkTree() (*Layout, error) {
-	return nil, nil
 }
 
 func layoutFromTodoFile() (*Layout, error) {
+
 	l := &Layout{
-		TaskList: []*Entries{},
+		Jobs: []*Job{},
 	}
 	fl, err := os.Open(".todo")
 	if err != nil {
@@ -66,25 +45,48 @@ func layoutFromTodoFile() (*Layout, error) {
 	}
 	sc := bufio.NewScanner(fl)
 	for sc.Scan() {
-		if sc.Text() == "" {
+		txt := sc.Text()
+		if txt == "" {
 			continue
 		}
-
-		tl := &Entries{
-			Title: sc.Text(),
-			List:  parseEntries(sc),
+		// Build out entries in a stepwise-fashion. A proper parser grammer would be better here
+		// but this is quick and assumes machine-written input
+		j := &Job{}
+		j.Tags = parseTags(txt)
+		j.Requires = parseRequires(txt)
+		sc.Scan()
+		t := &Task{}
+		txt = sc.Text()
+		if txt == "" {
+			continue
 		}
-		l.TaskList = append(l.TaskList, tl)
+		if txt[:1] != "[" {
+			t.Title = txt
+			sc.Scan()
+		}
+		t.Entries = findEntries(sc)
+		j.Tasks = append(j.Tasks, t)
+		l.Jobs = append(l.Jobs, j)
 	}
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
-
 	return l, nil
 }
 
-func parseEntries(sc *bufio.Scanner) []*Entry {
-	sc.Scan()
+func parseTags(txt string) []string {
+	n := strings.Index(txt, ":")
+	return stringToTags(txt[:n])
+}
+
+func parseRequires(txt string) []string {
+	n := strings.Index(txt, ": releases ")
+	if len(txt) > n+len(": releases [ ]") {
+		return stringToTags(txt[n+len(": releases "):])
+	}
+	return nil
+}
+func findEntries(sc *bufio.Scanner) []*Entry {
 	en := []*Entry{}
 	for {
 		d := sc.Text()
@@ -112,143 +114,241 @@ func parseEntries(sc *bufio.Scanner) []*Entry {
 	}
 }
 
+func contains(first []string, last string) bool {
+	for _, f := range first {
+		if f == last {
+			return true
+		}
+	}
+	return false
+}
+
+func tagsMatch(first, last []string) bool {
+	if len(first) != len(last) {
+		return false
+	}
+
+	for n, f := range first {
+		if f != last[n] {
+			return false
+		}
+	}
+	return true
+}
+
+// This is adequate for our needs.
+func stringToJobs(incoming string) (*Job, error) {
+	r := regexp.MustCompile(`([^\[\]]*)\s?(\[.*\])+\s?(.*)`)
+	matches := r.FindAllStringSubmatch(incoming, -1)
+	if len(matches[0]) < 3 {
+		return nil, errors.New("Could not parse string")
+	}
+	title := matches[0][1]
+	if len(matches[0]) == 4 {
+		title = fmt.Sprintf("%s%s", matches[0][1], matches[0][3])
+	}
+	t := &Task{
+		Title: title,
+	}
+	return &Job{
+		Tags:  stringToTags(matches[0][2]),
+		Tasks: []*Task{t},
+	}, nil
+}
+
+func trimBrackets(incoming string) string {
+	incoming = strings.TrimPrefix(incoming, "[")
+	return strings.TrimSuffix(incoming, "]")
+}
+
+func stringToTags(incoming string) []string {
+	var tags []string
+	var tmp string
+	var startTag bool
+	n := 0
+	for _, b := range []byte(incoming) {
+		if b == '[' {
+			startTag = true
+			tmp = ""
+			continue
+		}
+		if b == ']' {
+			n++
+			tags = append(tags, tmp)
+			startTag = false
+		}
+		if startTag {
+			tmp += string(b)
+		}
+	}
+	if tags[0] == "" {
+		return nil
+	}
+	return tags
+}
+
 func (l *Layout) destroy(title string) error {
 	if _, err := os.Stat(".todo"); err != nil {
 		return errors.New("Unable to locate .todo file")
 	}
-	for i, e := range l.TaskList {
-		if e.Title != title {
+	tasks, err := stringToJobs(title)
+	if err != nil {
+		return err
+	}
+	for i, e := range l.Jobs {
+		if tagsMatch(e.Tags, tasks.Tags) {
 			continue
 		}
-		if i < len(l.TaskList)-1 {
-			copy(l.TaskList[i:], l.TaskList[i+1:])
+		if i < len(l.Jobs)-1 {
+			copy(l.Jobs[i:], l.Jobs[i+1:])
 		}
-		l.TaskList = l.TaskList[:len(l.TaskList)-1]
+		l.Jobs = l.Jobs[:len(l.Jobs)-1]
 		return nil
+
 	}
 	return errors.New("No such Entry")
 }
 
-func (l *Layout) create(title string) error {
-	if len(title) < 1 {
-		return errors.New("Unable to add nil Entry")
+func (l *Layout) create(incoming string) error {
+	tasks, err := stringToJobs(incoming)
+	if err != nil {
+		return err
 	}
-	l.TaskList = append(l.TaskList, &Entries{
-		Title: title,
-		List:  []*Entry{},
-	})
+	l.Jobs = append(l.Jobs, tasks)
 	return nil
 }
 
-func (l *Layout) taskExists(Title, item string) bool {
-	for _, e := range l.TaskList {
-		if e.Title != Title {
+func (l *Layout) taskExists(title, item string) bool {
+	t, err := stringToJobs(title)
+	if err != nil {
+		return false
+	}
+	for _, e := range l.Jobs {
+		if !tagsMatch(e.Tags, t.Tags) {
 			continue
 		}
-		for _, t := range e.List {
-			if t.Desc == item {
-				return true
+		for _, t := range e.Tasks {
+			for _, d := range t.Entries {
+				if d.Desc == item {
+					return true
+				}
 			}
 		}
 	}
 	return false
 }
 
-func (l *Layout) addTask(Title, item string) error {
-	for _, e := range l.TaskList {
-		if e.Title != Title {
-			continue
-		}
-		e.List = append(e.List, &Entry{
-			Desc: item,
-			Done: false,
-		})
-		return nil
+// TODO(halfwit) Verify that task title doesn't already exist!
+func (l *Layout) addTask(title, item string) error {
+	t, err := stringToJobs(title)
+	if err != nil {
+		return err
 	}
-	line := &Entry{
+	entry := &Entry{
 		Desc: item,
 		Done: false,
 	}
-	l.TaskList = append(l.TaskList, &Entries{
-		Title: Title,
-		List:  []*Entry{line},
-	})
+	for _, job := range l.Jobs {
+		if !tagsMatch(job.Tags, t.Tags) {
+			continue
+		}
+		for _, task := range job.Tasks {
+			if task.Title == t.Tasks[0].Title {
+				task.Entries = append(task.Entries, entry)
+				return nil
+			}
+		}
+	}
+	t.Tasks[0].Entries = append(t.Tasks[0].Entries, entry)
+	for _, job := range l.Jobs {
+		if !tagsMatch(job.Tags, t.Tags) {
+			continue
+		}
+		job.Tasks = append(job.Tasks, t.Tasks[0])
+		return nil
+	}
+	l.Jobs = append(l.Jobs, t)
 	return nil
 }
 
-func (l *Layout) rmTask(Title, item string) error {
-	for _, e := range l.TaskList {
-		if e.Title != Title {
+func (l *Layout) rmTask(title, item string) error {
+	t, err := stringToJobs(title)
+	if err != nil {
+		return err
+	}
+	for _, e := range l.Jobs {
+		if !tagsMatch(e.Tags, t.Tags) {
 			continue
 		}
-		for i, t := range e.List {
-			if t.Desc != item {
-				continue
+		for _, t := range e.Tasks {
+			for i, j := range t.Entries {
+				if j.Desc != item {
+					continue
+				}
+				if i < len(t.Entries)-1 {
+					copy(t.Entries[i:], t.Entries[i+1:])
+				}
+				t.Entries = t.Entries[:len(t.Entries)-1]
+				return nil
 			}
-			if i < len(e.List)-1 {
-				copy(e.List[i:], e.List[i+1:])
-			}
-			e.List = e.List[:len(e.List)-1]
-			return nil
 		}
 	}
 	return fmt.Errorf("No such task/Entry")
 }
 
-func (l *Layout) toggleTask(Title, item string) error {
-	for _, e := range l.TaskList {
-		if e.Title != Title {
+func (l *Layout) toggleTask(title, item string) error {
+	t, err := stringToJobs(title)
+	if err != nil {
+		return err
+	}
+	for _, e := range l.Jobs {
+		if !tagsMatch(e.Tags, t.Tags) {
 			continue
 		}
-		for _, t := range e.List {
-			if t.Desc != item {
-				continue
+		for _, t := range e.Tasks {
+			for _, j := range t.Entries {
+				if j.Desc != item {
+					continue
+				}
+				j.Done = !j.Done
+				return nil
 			}
-			t.Done = !t.Done
-			return nil
 		}
 	}
 	return fmt.Errorf("No such task/Entry")
 }
 
-func (l *Layout) addLink(n int, from, to string) {
-	//for _, tasks := range l.TaskList {
-	switch n {
-	case parent:
-		//if tasks.Tag == to {
-		//	tasks.Requires = append(tasks.Requires, from)
-		//}
-	case child:
-		//if tasks.Tag == from {
-		//	tasks.Requires = append(tasks.Requires, to)
-		//}
+func (l *Layout) addLink(to, from string) {
+	to = trimBrackets(to)
+	from = trimBrackets(from)
+	for _, tasks := range l.Jobs {
+		for _, tag := range tasks.Tags {
+			if tag != to {
+				continue
+			}
+			if contains(tasks.Requires, from) {
+				continue
+			}
+			tasks.Requires = append(tasks.Requires, from)
+		}
 	}
-	//}
 }
 
-func (l *Layout) rmLink(n int, from, to string) {
-	//for _, tasks := range l.TaskList {
-	switch n {
-	case parent:
-		//if tasks.Tag == to {
-		//	for n, req := range tasks.Required {
-		//		if req != from {
-		//			continue
-		//      }
-		//		tasks.Required[n] = tasks.Required[len(tasks.Required)-1]
-		//		tasks.Required = tasks.Required[:len(tasks.Required)-1]
-		//	}
-		//}
-	case child:
-		//if tasks.Tag == from {
-		//	for n, req := range tasks.Required {
-		//		if req != to {
-		//			continue
-		//      }
-		//		tasks.Required[n] = tasks.Required[len(tasks.Required)-1]
-		//		tasks.Required = tasks.Required[:len(tasks.Required)-1]
-		//	}
-		//}
+// It's ugly, but it gets the thing done
+func (l *Layout) rmLink(to, from string) {
+	for _, tasks := range l.Jobs {
+		for _, tag := range tasks.Tags {
+			if tag != to {
+				continue
+			}
+			for n, req := range tasks.Requires {
+				if req != from {
+					continue
+				}
+				tasks.Requires[n] = tasks.Requires[len(tasks.Requires)-1]
+				tasks.Requires = tasks.Requires[:len(tasks.Requires)-1]
+			}
+
+		}
 	}
-	//}
 }
