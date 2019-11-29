@@ -30,6 +30,11 @@ type Entry struct {
 }
 */
 
+const (
+	parent int = iota
+	child
+)
+
 // Layout - Structure representing a given .todo file
 type Layout struct {
 	TaskList []*Entries
@@ -45,6 +50,10 @@ type Entries struct {
 type Entry struct {
 	Desc string
 	Done bool
+}
+
+func layoutFromWorkTree() (*Layout, error) {
+	return nil, nil
 }
 
 func layoutFromTodoFile() (*Layout, error) {
@@ -147,7 +156,6 @@ func (l *Layout) taskExists(Title, item string) bool {
 
 func (l *Layout) addTask(Title, item string) error {
 	for _, e := range l.TaskList {
-		// Found existing task, append to List
 		if e.Title != Title {
 			continue
 		}
@@ -201,4 +209,46 @@ func (l *Layout) toggleTask(Title, item string) error {
 		}
 	}
 	return fmt.Errorf("No such task/Entry")
+}
+
+func (l *Layout) addLink(n int, from, to string) {
+	//for _, tasks := range l.TaskList {
+	switch n {
+	case parent:
+		//if tasks.Tag == to {
+		//	tasks.Requires = append(tasks.Requires, from)
+		//}
+	case child:
+		//if tasks.Tag == from {
+		//	tasks.Requires = append(tasks.Requires, to)
+		//}
+	}
+	//}
+}
+
+func (l *Layout) rmLink(n int, from, to string) {
+	//for _, tasks := range l.TaskList {
+	switch n {
+	case parent:
+		//if tasks.Tag == to {
+		//	for n, req := range tasks.Required {
+		//		if req != from {
+		//			continue
+		//      }
+		//		tasks.Required[n] = tasks.Required[len(tasks.Required)-1]
+		//		tasks.Required = tasks.Required[:len(tasks.Required)-1]
+		//	}
+		//}
+	case child:
+		//if tasks.Tag == from {
+		//	for n, req := range tasks.Required {
+		//		if req != to {
+		//			continue
+		//      }
+		//		tasks.Required[n] = tasks.Required[len(tasks.Required)-1]
+		//		tasks.Required = tasks.Required[:len(tasks.Required)-1]
+		//	}
+		//}
+	}
+	//}
 }

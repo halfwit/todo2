@@ -26,7 +26,16 @@ func writeTodo(l *Layout) {
 }
 
 // Writer that outputs in dot format
+func writeDot(l *Layout) {
+
+}
 
 // Writer that outputs only leaves
+func writeList(l *Layout) {
+
+}
 
 // Writer that outputs all nodes
+func writeListAll(l *Layout) {
+
+}
