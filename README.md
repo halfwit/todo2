@@ -130,9 +130,11 @@ By index, it's similar: `todo task toggle '#92930' 1` would update the .todo fil
 
 Now, no one wants to write all that out all the time. Shouldn't this be able to pull a generic `// TODO:` tag, or `# TODO:`, etc? Yeah, I thought so too.
 
-`todo generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG: [#92930] Trying to seek returns incomprehensible error when calling SomeCall`   an entry will be made in an appropriate .todo file in that particular source directory/subdirectory, which will be created as necessary.
- - files with extensions will have the extension replaced with .todo, and files without extensions will gain the extension .todo. Name collisions should be benign here.
- - more extensive coverage of tagging conventions can be Pull Requested as needed by users
+`todo generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG: [#92930] Trying to seek returns incomprehensible error when calling SomeCall`   an appropriate entry will be made in the .todo file.
+
+If there is no existing .todo file, one will be created. Otherwise it will be updated to reflect completed tasks, removed tasks, and related.
+
+More extensive coverage of tagging conventions can be Pull Requested as needed by users
 
 ## Managing dependancy hierarchy
 
@@ -143,11 +145,7 @@ To add something as a child dependency, `todo add child <parent name> <child nam
 Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree.
 
 ## Commands of intrigue
- - `todo init` will create, if none exists, the backing Makefile-like file used internally
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies, with the completed nodes elided
  - `todo dotall` will output a complete graph of all task hierarchies
-
-## Sharing
-The best method is to include your existing todo2 main file into your current revision system, and symbolically link it into the `$XDG_DATA_HOME/todo2/myproject` directory. 
