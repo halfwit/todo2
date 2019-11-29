@@ -52,8 +52,6 @@ func (c *command) setTask(arg string) error {
 	switch arg {
 	case "help":
 		c.runner = help
-	case "init":
-		c.runner = initFile
 	case "list":
 		c.runner = list
 	case "listall":

@@ -1,28 +1,5 @@
 package main
 
-import (
-	"os"
-	"text/template"
-)
-
-var tmpl = template.Must(template.New("new").Parse("# {{.Name}} TODO"))
-
-type makefile struct {
-	Name string
-	//nodes []node
-}
-
-func initFile(c *command) error {
-	wr, err := os.Create(c.mkfile)
-	if err != nil {
-		return err
-	}
-	defer wr.Close()
-	//TODO(halfwit): Create a more useful type here
-	data := &makefile{c.mkfile}
-	return tmpl.Execute(os.Stdout, data)
-}
-
 func list(c *command) error {
 	// Parse makefile into DAG
 	// Pretty print the leaves
