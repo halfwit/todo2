@@ -142,8 +142,6 @@ To add something as a child dependency, `todo add child <parent name> <child nam
 
 Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree.
 
-You end up with a 
-
 ## Commands of intrigue
  - `todo init` will create, if none exists, the backing Makefile-like file used internally
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
