@@ -44,7 +44,7 @@ Make solves these sort of dependency hierarchies cleanly, and since I didn't wan
 
 ## .todo files
 
-A .todo file contains a checklist of items to complete an atomic task. For example, `polygon.todo` may contain the following:
+A .todo file contains a checklist of items to complete an atomic task. For example, `myprogram/.todo` may contain the following:
 
 ```
 #92930:
