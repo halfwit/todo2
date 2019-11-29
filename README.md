@@ -47,27 +47,65 @@ Make solves these sort of dependency hierarchies cleanly, and since I didn't wan
 A .todo file contains a checklist of items to complete an atomic task. For example, `polygon.todo` may contain the following:
 
 ```
-BUG #92930 - Trying to seek returns incomprehensible error when calling SomeCall
+#92930:
+BUG - Trying to seek returns incomprehensible error when calling SomeCall
 [ ] polygon.go: MyType should implement ReaderAt
 [ ] polygon.go: Check return value of SomeCall and try to recover
 [ ] polygon.go: Hand back better error info to the calling function
 
-BUG #012099 - Blob considered too small by users
+#012099:
+BUG - Blob considered too small by users
 [ ] blob.go: Make blob 2x larger when it feels threatened
 [ ] blob.go: Implement room bounds checking
 ```
 
 To add an entry into a particular task, such as the last line of BUG #92930 is trivial:
-`todo task add 'BUG #92930' "polygon.go: Hand back better error info to the calling function"`
+`todo task add 'BUG: [#92930]' "polygon.go: Hand back better error info to the calling function"`
 
 You can also use stdin:
 
 `some function | todo task add someentry`
 
 If for some reason you wish to remove an entry, you can use the complement to `add`, `rm`.
-`todo task rm 'BUG #92930' <index|string>`
+`todo task rm 'BUG: [#92930]' <index|string>`
 
 Since .todo files are simply text files, you can also achieve any of the above by opening and editing the file by hand.
+
+The schema for an entry is non-complicated. Given a line in your code, such as: 
+`BUG(halfwit) - There's an issue with my code and I don't understand why`, an entry would be populated as follows.
+
+```
+general:
+BUG(halfwit) - There's an issue with my code and I don't know why
+```
+
+Additionally, tags are used as a header. Multiple tags are fine as well!
+
+```
+// BUG(halfwit): [enhancement] [#354] There's an issue with my code and I seem to have figured it out
+// requires [#353]
+```
+
+```
+[enhancement] [#354]: requires [#353]
+BUG(halfwit) - There's an issue with my code and I seem to have figured it out
+```
+
+A more interesting example generated like this would have related nodes
+
+```
+[]: requires [#353]
+BUG(halfwit) - There's an issue with my code and I seem to have figured it out
+
+[#354]: requires [#352]
+TODO - Write the code
+
+[#353]: requires [#352]
+TODO - write other code
+
+[#352]:
+TODO - write the other code
+```
 
 ## Completing tasks in .todo files
 
@@ -77,16 +115,16 @@ The following command modifies the state of a given entry's task:
 
 For example, to toggle the completion of MyType implementing ReaderAt:
 
-`todo task toggle 'BUG #92930' 'MyType should implement ReaderAt'`
+`todo task toggle '#92930' 'MyType should implement ReaderAt'`
 
-You'll notice the file name is elided, for brevity a partial string match is all that is required. `todo task toggle 'BUG #92930' MyType` would suffice in our example.
-By index, it's similar: `todo task toggle 'BUG #92930' 1` would update the .todo file to read `[x] polygon.go: MyType should implement ReaderAt`.
+You'll notice the file name is elided, for brevity a partial string match is all that is required. `todo task toggle '#92930' MyType` would suffice in our example.
+By index, it's similar: `todo task toggle '#92930' 1` would update the .todo file to read `[x] polygon.go: MyType should implement ReaderAt`.
 
 ## Automatically generate .todo files
 
 Now, no one wants to write all that out all the time. Shouldn't this be able to pull a generic `// TODO:` tag, or `# TODO:`, etc? Yeah, I thought so too.
 
-`todo generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG #92930: Trying to seek returns incomprehensible error when calling SomeCall`   an entry will be made in an appropriate .todo file in that particular source directory/subdirectory, which will be created as necessary.
+`todo generate` will walk the source tree, looking `TODO`, `BUG`, `RELEASE`, and other related tags. If they have a tag, such as `BUG: [#92930] Trying to seek returns incomprehensible error when calling SomeCall`   an entry will be made in an appropriate .todo file in that particular source directory/subdirectory, which will be created as necessary.
  - files with extensions will have the extension replaced with .todo, and files without extensions will gain the extension .todo. Name collisions should be benign here.
  - more extensive coverage of tagging conventions can be Pull Requested as needed by users
 
@@ -94,9 +132,11 @@ Now, no one wants to write all that out all the time. Shouldn't this be able to 
 
 `todo add` is the base command we'll be using, to add hierarchies. (A complementary `todo rm` can be used to undo anything `todo add` can do!)
 
-To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child 'BUG #01209' 'BUG #92930'`, or equivilently `todo add parent 'BUG #92930' 'BUG #01209'`. 
+To add something as a child dependency, `todo add child <parent name> <child name>`. From the above examples, you would issue `todo add child '#01209' '#92930'`, or equivilently `todo add parent '#92930' '#01209'`. 
 
 Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree.
+
+You end up with a 
 
 ## Commands of intrigue
  - `todo init` will create, if none exists, the backing Makefile-like file used internally
