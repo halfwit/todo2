@@ -72,7 +72,8 @@ If for some reason you wish to remove an entry, you can use the complement to `a
 Since .todo files are simply text files, you can also achieve any of the above by opening and editing the file by hand.
 
 The schema for an entry is non-complicated. Given a line in your code, such as: 
-`BUG(halfwit) - There's an issue with my code and I don't understand why`, an entry would be populated as follows.
+`BUG(halfwit) - There's an issue with my code and I don't understand why`
+, an entry would be populated as follows.
 
 ```
 general:
@@ -82,20 +83,25 @@ BUG(halfwit) - There's an issue with my code and I don't know why
 Additionally, tags are used as a header. Multiple tags are fine as well!
 
 ```
-// BUG(halfwit): [enhancement] [#354] There's an issue with my code and I seem to have figured it out
+// BUG(halfwit): [enhancement] [#354] There's an issue with my code and I don't know why
 // requires [#353]
 ```
 
+Would result with the following:
+
 ```
 [enhancement] [#354]: requires [#353]
-BUG(halfwit) - There's an issue with my code and I seem to have figured it out
+BUG(halfwit) - There's an issue with my code and I don't know why
 ```
 
 A more interesting example generated like this would have related nodes
 
 ```
-[]: requires [#353]
+[#123]: requires [#353] [#124]
 BUG(halfwit) - There's an issue with my code and I seem to have figured it out
+
+[#124]:
+TODO - write the first bit of code
 
 [#354]: requires [#352]
 TODO - Write the code
