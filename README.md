@@ -145,8 +145,37 @@ To add something as a child dependency, `todo add child <parent name> <child nam
 Arbitrarily many dependencies can be added between arbitrary pieces within the current working source tree.
 
 ## Commands of intrigue
- - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
+ - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies)
+
+ ```
+[1] - TODO(halfwit): Write all the code
+ ✗ general: Show what things look like when added manually
+ ✗ general: Show what auto generated looks like as well
+[2] - TODO(halfwit): remember how to write c code on normal systems
+ ✗ sample.c: write the stuff
+ ✗ sample.c: don't get hung up on the details
+ ```
+
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
+
+ ```
+[1] - TODO(halfwit): Write all the code
+ ✗ general: Show what things look like when added manually
+ ✗ general: Show what auto generated looks like as well
+[example] - 
+ ✓ general: Show how headers are optional
+ ✓ general: Show something silly
+[2] - TODO(halfwit): remember how to write c code on normal systems
+ ✗ sample.c: write the stuff
+ ✗ sample.c: don't get hung up on the details
+[3] - TODO(halfwit): Make a demo of something interesting to demo todo generate
+ ✗ sample.go: write the code
+ ✗ sample.go: take the time
+[4] - TODO(halfwit): Write some sample code
+ ✓ sample.sh: get to the choppa
+ ✗ sample.sh: return
+ ```
+
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies
  
   ![graph](samples/my.png)
