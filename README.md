@@ -180,4 +180,5 @@ Arbitrarily many dependencies can be added between arbitrary pieces within the c
 
  - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies
  
+ `$ todo dot | dot -Tpng -o my.png`
   ![graph](samples/my.png)
