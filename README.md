@@ -148,6 +148,7 @@ Arbitrarily many dependencies can be added between arbitrary pieces within the c
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies)
 
  ```
+ $ todo list
 [1] - TODO(halfwit): Write all the code
  ✗ general: Show what things look like when added manually
  ✗ general: Show what auto generated looks like as well
@@ -159,6 +160,7 @@ Arbitrarily many dependencies can be added between arbitrary pieces within the c
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
 
  ```
+ $ todo listall
 [1] - TODO(halfwit): Write all the code
  ✗ general: Show what things look like when added manually
  ✗ general: Show what auto generated looks like as well
