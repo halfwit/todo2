@@ -147,5 +147,5 @@ Arbitrarily many dependencies can be added between arbitrary pieces within the c
 ## Commands of intrigue
  - `todo list` will output a list of all current leaves in the graph, (nodes which have no pending dependencies) 
  - `todo listall` will list every piece of the graph in a flat structure. This is very useful in defining hierarchies on complicated TODO list
- - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies, with the completed nodes elided
- - `todo dotall` will output a complete graph of all task hierarchies
+ - `todo dot` can be piped to `graphviz` and friends to view your current task hierarchies
+  ![graph](samples/my.png)
