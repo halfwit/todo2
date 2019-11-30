@@ -19,7 +19,6 @@ TODO(halfwit): Write some sample code
 [ ] sample.sh: return
 
 [example]:
-I guess they shouldn't be optional
 [x] general: Show how headers are optional
 [x] general: Show something silly
 

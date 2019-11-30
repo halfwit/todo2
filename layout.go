@@ -87,7 +87,11 @@ func parseTasks(sc *bufio.Scanner) []*Task {
 		if len(sc.Text()) == 0 {
 			return tasks
 		}
-		sc.Scan()
+		if strings.HasPrefix(title, "[ ]") || strings.HasPrefix(title, "[x]") {
+			title = ""
+		} else {
+			sc.Scan()
+		}
 		t := &Task{
 			Title:   title,
 			Entries: findEntries(sc),
