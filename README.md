@@ -126,7 +126,7 @@ For example, to toggle the completion of MyType implementing ReaderAt:
 You'll notice the file name is elided, for brevity a partial string match is all that is required. `todo task toggle '#92930' MyType` would suffice in our example.
 By index, it's similar: `todo task toggle '#92930' 1` would update the .todo file to read `[x] polygon.go: MyType should implement ReaderAt`.
 
-## Automatically generate .todo files
+## Automatically generate .todo files - Coming soon!
 
 Now, no one wants to write all that out all the time. Shouldn't this be able to pull a generic `// TODO:` tag, or `# TODO:`, etc? Yeah, I thought so too.
 
