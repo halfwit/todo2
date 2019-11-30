@@ -87,9 +87,16 @@ func writeList(l *Layout) {
 	for _, leaf := range leaves {
 		job := leaf.Value.(*Job)
 		for _, t := range job.Tasks {
-			fmt.Printf("%v\t%s\n", job.Tags, t.Title)
+			fmt.Printf("%v - %s\n", job.Tags, t.Title)
 			for _, e := range t.Entries {
-				fmt.Printf("\t%s\n", e.Desc)
+				var f rune
+				switch e.Done {
+				case true:
+					f = '✓'
+				case false:
+					f = '✗'
+				}
+				fmt.Printf(" %c %s\n", f, e.Desc)
 			}
 		}
 	}
@@ -114,7 +121,7 @@ func writeListAll(l *Layout) {
 			walk(child)
 		}
 		for _, t := range job.Tasks {
-			fmt.Printf("[%v]\t%s\n", job.Key, t.Title)
+			fmt.Printf("[%v] - %s\n", job.Key, t.Title)
 			for _, e := range t.Entries {
 				var f rune
 				switch e.Done {
