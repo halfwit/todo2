@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -17,6 +16,7 @@ type Layout struct {
 
 // Job - A tagged collection of tasks
 type Job struct {
+	Key      string
 	Tags     []string
 	Requires []string
 	Tasks    []*Task
@@ -45,28 +45,18 @@ func layoutFromTodoFile() (*Layout, error) {
 	}
 	sc := bufio.NewScanner(fl)
 	for sc.Scan() {
-		txt := sc.Text()
-		if txt == "" {
+		if sc.Text() == "" {
 			continue
 		}
 		// Build out entries in a stepwise-fashion. A proper parser grammer would be better here
 		// but this is quick and assumes machine-written input
 		j := &Job{}
-		j.Tags = parseTags(txt)
-		j.Requires = parseRequires(txt)
-		sc.Scan()
-		t := &Task{}
-		txt = sc.Text()
-		if txt == "" {
-			continue
-		}
-		if txt[:1] != "[" {
-			t.Title = txt
-			sc.Scan()
-		}
-		t.Entries = findEntries(sc)
-		j.Tasks = append(j.Tasks, t)
+		j.Tags = parseTags(sc)
+		j.Key = strings.Join(j.Tags, ", ")
+		j.Requires = parseRequires(sc)
+		j.Tasks = parseTasks(sc)
 		l.Jobs = append(l.Jobs, j)
+
 	}
 	if err := sc.Err(); err != nil {
 		return nil, err
@@ -74,27 +64,44 @@ func layoutFromTodoFile() (*Layout, error) {
 	return l, nil
 }
 
-func parseTags(txt string) []string {
+func parseTags(sc *bufio.Scanner) []string {
+	txt := sc.Text()
 	n := strings.Index(txt, ":")
 	return stringToTags(txt[:n])
 }
 
-func parseRequires(txt string) []string {
-	n := strings.Index(txt, ": releases ")
-	if len(txt) > n+len(": releases [ ]") {
-		return stringToTags(txt[n+len(": releases "):])
+func parseRequires(sc *bufio.Scanner) []string {
+	txt := sc.Text()
+	defer sc.Scan()
+	n := strings.Index(txt, ": requires ")
+	if len(txt) > n+len(": requires [ ]") {
+		return stringToTags(txt[n+len(": requires "):])
 	}
 	return nil
 }
+
+func parseTasks(sc *bufio.Scanner) []*Task {
+	var tasks []*Task
+	for {
+		title := sc.Text()
+		if len(sc.Text()) == 0 {
+			return tasks
+		}
+		sc.Scan()
+		t := &Task{
+			Title:   title,
+			Entries: findEntries(sc),
+		}
+		tasks = append(tasks, t)
+	}
+}
+
 func findEntries(sc *bufio.Scanner) []*Entry {
 	en := []*Entry{}
 	for {
 		d := sc.Text()
 		if len(d) < 4 {
 			return en
-		}
-		if err := sc.Err(); err != nil {
-			log.Fatal(err)
 		}
 		switch d[:3] {
 		case "[ ]":
@@ -136,13 +143,25 @@ func tagsMatch(first, last []string) bool {
 	return true
 }
 
+func isCompleted(job *Job) bool {
+	for _, task := range job.Tasks {
+		for _, entry := range task.Entries {
+			if !entry.Done {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // This is adequate for our needs.
 func stringToJobs(incoming string) (*Job, error) {
 	r := regexp.MustCompile(`([^\[\]]*)\s?(\[.*\])+\s?(.*)`)
 	matches := r.FindAllStringSubmatch(incoming, -1)
-	if len(matches[0]) < 3 {
+	if matches != nil && len(matches[0]) < 3 {
 		return nil, errors.New("Could not parse string")
 	}
+
 	title := matches[0][1]
 	if len(matches[0]) == 4 {
 		title = fmt.Sprintf("%s%s", matches[0][1], matches[0][3])
@@ -181,10 +200,22 @@ func stringToTags(incoming string) []string {
 			tmp += string(b)
 		}
 	}
-	if tags[0] == "" {
+	if tags == nil || tags[0] == "" {
 		return nil
 	}
 	return tags
+}
+
+func (l *Layout) removeCompleted() {
+	for i, job := range l.Jobs {
+		if !isCompleted(job) {
+			continue
+		}
+		if i < len(l.Jobs)-1 {
+			copy(l.Jobs[i:], l.Jobs[i+1:])
+		}
+		l.Jobs = l.Jobs[:len(l.Jobs)-1]
+	}
 }
 
 func (l *Layout) destroy(title string) error {

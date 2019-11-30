@@ -10,8 +10,6 @@ func list(c *command) error {
 	if err != nil {
 		return err
 	}
-	//d := dagFromLayout(l)
-	//writeList(d)
 	writeList(l)
 	return nil
 }
@@ -21,8 +19,6 @@ func listall(c *command) error {
 	if err != nil {
 		return err
 	}
-	//d := dagFromLayout(l)
-	//writeListAll(d)
 	writeListAll(l)
 	return nil
 }
@@ -78,9 +74,12 @@ func add(c *command) error {
 
 // generate walks the file looking for a handful of known tokens
 func generate(c *command) error {
-	g := newGenerator()
+	g := &generator{}
 	if g.dotTodoExists() {
-		g.parseTodo()
+		err := g.parseTodo()
+		if err != nil {
+			return err
+		}
 	}
 	l := g.toLayout()
 	writeTodo(l)
