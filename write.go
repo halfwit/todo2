@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"text/template"
@@ -19,24 +19,25 @@ const todoTmpl = `{{range .Jobs}}{{range $n, $t := .Tags}}{{if $n}} {{end}}[{{$t
 {{end}}{{end}}`
 
 // Writer that creates our normal file
-func writeTodo(l *Layout) {
+func writeTodo(l *Layout) (string, error) {
 	wr, err := os.Create(".todo")
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	defer wr.Close()
 
 	t := template.Must(template.New("todoTmpl").Parse(todoTmpl))
 
-	err = t.Execute(wr, l)
-	if err != nil {
-		log.Fatal(err)
+	if e := t.Execute(wr, l); e != nil {
+		return "", e
 	}
+
+	return "", nil
 }
 
 // Writer that outputs in dot format
-func writeDot(l *Layout) {
+func writeDot(l *Layout) (string, error) {
 	var sb strings.Builder
 
 	sb.WriteString("digraph depgraph {\n\trankdir=RL;\n")
@@ -67,7 +68,7 @@ func writeDot(l *Layout) {
 			for _, entry := range job.Tasks[0].Entries {
 				sb.WriteString("\n")
 				sb.WriteString(entry.Desc)
-				
+
 				if entry.Done {
 					sb.WriteString(" ✓")
 				}
@@ -84,25 +85,32 @@ func writeDot(l *Layout) {
 		}
 
 		for _, req := range job.Requires {
-			sb.WriteString(fmt.Sprintf("%s -> %s;\n", job.Key, req))
+			sb.WriteString(fmt.Sprintf("%s -> %s;\n", req, job.Key))
 		}
 	}
 
 	sb.WriteString("}\n")
-	fmt.Println(sb.String())
+	return sb.String(), nil
 }
 
 // Writer that outputs only leaves
-func writeList(l *Layout) {
+func writeList(l *Layout) (string, error) {
+	var sb strings.Builder
+
 	l.removeCompleted()
-	d := dagFromLayout(l)
+
+	d, err := dagFromLayout(l)
+	if err != nil {
+		return "", err
+	}
+
 	leaves := d.SinkVertices()
 
 	for _, leaf := range leaves {
 		job := leaf.Value.(*Job)
 
 		for _, t := range job.Tasks {
-			fmt.Printf("%v - %s\n", job.Tags, t.Title)
+			fmt.Fprintf(&sb, "%v - %s\n", job.Tags, t.Title)
 
 			for _, e := range t.Entries {
 				var f rune
@@ -114,30 +122,38 @@ func writeList(l *Layout) {
 					f = '✗'
 				}
 
-				fmt.Printf(" %c %s\n", f, e.Desc)
+				fmt.Fprintf(&sb, " %c %s\n", f, e.Desc)
 			}
 		}
 	}
+
+	return sb.String(), nil
 }
 
 // Writer that outputs all nodes
-func writeListAll(l *Layout) {
-	var walk func(v *dag.Vertex)
+func writeListAll(l *Layout) (string, error) {
+	var walk func(v *dag.Vertex) error
+	var sb strings.Builder
 
-	d := dagFromLayout(l)
+	d, err := dagFromLayout(l)
+	if err != nil {
+		return "", err
+	}
+
 	seen := map[*Job]bool{}
 
-	walk = func(v *dag.Vertex) {
+	walk = func(v *dag.Vertex) error {
+
 		job := v.Value.(*Job)
 		if seen[job] {
-			return
+			return errors.New(errBadTodo)
 		}
 
 		seen[job] = true
 
 		children, err := d.Successors(v)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		for _, child := range children {
@@ -145,7 +161,7 @@ func writeListAll(l *Layout) {
 		}
 
 		for _, t := range job.Tasks {
-			fmt.Printf("[%v] - %s\n", job.Key, t.Title)
+			fmt.Fprintf(&sb, "[%v] - %s\n", job.Key, t.Title)
 
 			for _, e := range t.Entries {
 				var f rune
@@ -157,12 +173,18 @@ func writeListAll(l *Layout) {
 					f = '✗'
 				}
 
-				fmt.Printf(" %c %s\n", f, e.Desc)
+				fmt.Fprintf(&sb, " %c %s\n", f, e.Desc)
 			}
 		}
+
+		return nil
 	}
 
 	for _, t := range d.SourceVertices() {
-		walk(t)
+		if e := walk(t); e != nil {
+			return "", e
+		}
 	}
+
+	return sb.String(), nil
 }

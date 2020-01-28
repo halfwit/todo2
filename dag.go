@@ -1,19 +1,17 @@
 package main
 
 import (
-	"log"
-
 	"github.com/goombaio/dag"
 )
 
-func dagFromLayout(l *Layout) *dag.DAG {
+func dagFromLayout(l *Layout) (*dag.DAG, error) {
 	dg := dag.NewDAG()
 	dm := make(map[string]*dag.Vertex)
-	
+
 	for _, job := range l.Jobs {
 		dm[job.Key] = dag.NewVertex(job.Key, job)
 		if e := dg.AddVertex(dm[job.Key]); e != nil {
-			log.Println(e)
+			return nil, e
 		}
 	}
 
@@ -29,11 +27,11 @@ func dagFromLayout(l *Layout) *dag.DAG {
 				}
 
 				if e := dg.AddEdge(dm[job.Key], dm[other.Key]); e != nil {
-					log.Println(e)
+					return nil, e
 				}
 			}
 		}
 	}
 
-	return dg
+	return dg, nil
 }

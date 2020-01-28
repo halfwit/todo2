@@ -16,7 +16,7 @@ func (g *generator) dotTodoExists() bool {
 
 func (g *generator) parseTodo() error {
 	var err error
-	
+
 	g.existing, err = layoutFromTodoFile()
 	if err != nil {
 		return err

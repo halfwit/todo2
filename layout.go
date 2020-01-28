@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+
 	"os"
 	"regexp"
 	"strings"
@@ -70,7 +71,7 @@ func layoutFromTodoFile() (*Layout, error) {
 func parseTags(sc *bufio.Scanner) []string {
 	txt := sc.Text()
 	n := strings.Index(txt, ":")
-	
+
 	return stringToTags(txt[:n])
 }
 
@@ -179,7 +180,7 @@ func stringToJobs(incoming string) (*Job, error) {
 	r := regexp.MustCompile(`([^\[\]]*)\s?(\[.*\])+\s?(.*)`)
 
 	matches := r.FindAllStringSubmatch(incoming, -1)
-	if matches != nil && len(matches[0]) < 3 {
+	if matches == nil || len(matches[0]) < 3 {
 		return nil, errors.New("could not parse string")
 	}
 

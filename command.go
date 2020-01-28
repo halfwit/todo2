@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 )
@@ -10,6 +11,7 @@ const (
 	add      = "add"
 	child    = "child"
 	create   = "create"
+	destroy  = "destroy"
 	dot      = "dot"
 	generate = "generate"
 	list     = "list"
@@ -17,11 +19,12 @@ const (
 	parent   = "parent"
 	remove   = "rm"
 	task     = "task"
+	toggle   = "toggle"
 )
 
 type command struct {
 	args   []string
-	runner func() error
+	runner func() (string, error)
 }
 
 func newCommand(arg string) (*command, error) {
@@ -29,7 +32,7 @@ func newCommand(arg string) (*command, error) {
 	if arg == task {
 		c.args = flag.Args()[1:]
 		c.runner = c.task
-		
+
 		return c, nil
 	}
 
@@ -71,14 +74,14 @@ func setTask(c *command, arg string) error {
 	return nil
 }
 
-func (c *command) add() error {
+func (c *command) add() (string, error) {
 	if len(c.args) != 3 {
-		return fmt.Errorf(errNoArg, add)
+		return "", fmt.Errorf(errNoArg, add)
 	}
 
 	l, err := layoutFromTodoFile()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	switch c.args[0] {
@@ -87,156 +90,146 @@ func (c *command) add() error {
 	case child:
 		l.addLink(c.args[1], c.args[2])
 	default:
-		return fmt.Errorf(errBadArg, c.args[0])
+		return "", fmt.Errorf(errBadArg, c.args[0])
 	}
 
-	writeTodo(l)
-
-	return nil
+	return writeTodo(l)
 }
 
-func (c *command) dot() error {
+func (c *command) dot() (string, error) {
 	l, err := layoutFromTodoFile()
 	if err != nil && c.args[0] != create {
-		return err
+		return "", err
 	}
 
-	writeDot(l)
-
-	return nil
+	return writeDot(l)
 }
 
 // generate walks the file looking for a handful of known tokens
-func (c *command) generate() error {
+func (c *command) generate() (string, error) {
 	g := &generator{}
 	if g.dotTodoExists() {
 		err := g.parseTodo()
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	l := g.toLayout()
-	writeTodo(l)
 
-	return nil
+	return writeTodo(l)
 }
 
-func (c *command) list() error {
+func (c *command) list() (string, error) {
 	l, err := layoutFromTodoFile()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	writeList(l)
-
-	return nil
+	return writeList(l)
 }
 
-func (c *command) listall() error {
+func (c *command) listall() (string, error) {
 	l, err := layoutFromTodoFile()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	writeListAll(l)
-
-	return nil
+	return writeListAll(l)
 }
 
-func (c *command) rm() error {
+func (c *command) rm() (string, error) {
 	if len(c.args) != 3 {
-		return fmt.Errorf(errNoArg, remove)
+		return "", fmt.Errorf(errNoArg, remove)
 	}
 
 	l, err := layoutFromTodoFile()
 	if err != nil && c.args[0] != create {
-		return err
+		return "", err
 	}
-
-	defer writeTodo(l)
 
 	switch c.args[0] {
-	case "parent":
+	case parent:
 		l.rmLink(c.args[2], c.args[1])
-	case "child":
+	case child:
 		l.rmLink(c.args[1], c.args[1])
 	default:
-		return fmt.Errorf(errBadArg, c.args[0])
+		return "", fmt.Errorf(errBadArg, c.args[0])
 	}
 
-	return nil
+	return writeTodo(l)
 }
 
-func (c *command) run() error {
+func (c *command) run() (string, error) {
 	if c.runner != nil {
-		err := c.runner()
-		if err != nil {
-			return err
-		}
+		return c.runner()
 	}
 
-	return nil
+	return "", errors.New(errNoCmd)
 }
 
-func (c *command) task() error {
+func (c *command) task() (string, error) {
 	if len(c.args) < 2 {
-		return fmt.Errorf(errNoArg, task)
+		return "", fmt.Errorf(errNoArg, task)
 	}
 
 	l, err := layoutFromTodoFile()
 	if err != nil && c.args[0] != create {
-		return err
+		return "", err
 	}
 
 	switch c.args[0] {
 	case create:
 		err = l.create(c.args[1])
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		writeTodo(l)
 
-		return nil
-	case "destroy":
+		return "", nil
+	case destroy:
 		err := l.destroy(c.args[1])
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		writeTodo(l)
 
-		return nil
-	case "add":
+		return "", nil
+	case add:
 		if l.taskExists(c.args[1], c.args[2]) {
-			return fmt.Errorf(errExists, c.args[1])
+			return "", fmt.Errorf(errExists, c.args[1])
 		}
 
 		if e := l.addTask(c.args[1], c.args[2]); e != nil {
-			return e
+			return "", e
 		}
 
 		writeTodo(l)
 
-		return nil
-	case "rm":
+		return "", nil
+	case remove:
 		if !l.taskExists(c.args[1], c.args[2]) {
-			return fmt.Errorf(errNoEntry, c.args[2])
+			return "", fmt.Errorf(errNoEntry, c.args[2])
 		}
 
-		defer writeTodo(l)
-
-		return l.rmTask(c.args[1], c.args[2])
-	case "toggle":
-		if !l.taskExists(c.args[1], c.args[2]) {
-			return fmt.Errorf(errNoEntry, c.args[1])
+		if e := l.rmTask(c.args[1], c.args[2]); e != nil {
+			return "", e
 		}
 
-		defer writeTodo(l)
+		return writeTodo(l)
+	case toggle:
+		if !l.taskExists(c.args[1], c.args[2]) {
+			return "", fmt.Errorf(errNoEntry, c.args[1])
+		}
 
-		return l.toggleTask(c.args[1], c.args[2])
+		if e := l.toggleTask(c.args[1], c.args[2]); e != nil {
+			return "", e
+		}
+
+		return writeTodo(l)
 	default:
-		return fmt.Errorf(errBadArg, c.args[0])
+		return "", fmt.Errorf(errBadArg, c.args[0])
 	}
 }
