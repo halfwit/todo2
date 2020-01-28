@@ -1,7 +1,7 @@
 package main
 
-
 import "os"
+
 type generator struct {
 	existing *Layout
 }
@@ -10,15 +10,18 @@ func (g *generator) dotTodoExists() bool {
 	if _, err := os.Stat(".todo"); err != nil {
 		return false
 	}
+
 	return true
 }
 
 func (g *generator) parseTodo() error {
 	var err error
+	
 	g.existing, err = layoutFromTodoFile()
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
